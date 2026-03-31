@@ -5,139 +5,140 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="Periodic Master: Spin Quest", page_icon="🧪", layout="wide")
 
-# 2. Sidebar Controls (Sound Toggle)
-st.sidebar.title("🎮 Lab Controls")
-st.session_state.mute = st.sidebar.toggle("Mute All Sounds", value=False)
+# 2. Sidebar Controls
+st.sidebar.title("🎮 Lab Command Center")
+st.session_state.mute = st.sidebar.toggle("Mute Laboratory Sounds", value=False)
+st.sidebar.info("Developed by Ukazim Chidinma Favour")
 
-# 3. Master Question Bank (20 Elements - Hidden Names)
-if 'master_bank' not in st.session_state:
-    st.session_state.master_bank = [
-        {"name": "Hydrogen", "q": "Which element is the lightest gas with 1 proton?", "options": ["H", "He", "Li", "Be"], "ans": "H"},
-        {"name": "Helium", "q": "Which Noble Gas has 2 protons and is used in balloons?", "options": ["H", "He", "Ne", "Ar"], "ans": "He"},
-        {"name": "Lithium", "q": "Identify the Group 1 metal with Atomic Number 3.", "options": ["Li", "Na", "K", "Be"], "ans": "Li"},
-        {"name": "Beryllium", "q": "Which element has 4 protons and 4 electrons?", "options": ["Li", "Be", "B", "Mg"], "ans": "Be"},
-        {"name": "Boron", "q": "The metalloid with Atomic Number 5 used in glass.", "options": ["B", "C", "Si", "Al"], "ans": "B"},
-        {"name": "Carbon", "q": "The core of organic chemistry with 6 protons.", "options": ["N", "O", "C", "P"], "ans": "C"},
-        {"name": "Nitrogen", "q": "Which gas makes up 78% of the air (No. 7)?", "options": ["O", "N", "H", "Ar"], "ans": "N"},
-        {"name": "Oxygen", "q": "Essential for respiration with Atomic Number 8.", "options": ["F", "N", "O", "C"], "ans": "O"},
-        {"name": "Fluorine", "q": "The most reactive Halogen with 9 protons.", "options": ["Cl", "F", "Br", "I"], "ans": "F"},
-        {"name": "Neon", "q": "Noble Gas No. 10 that glows orange-red.", "options": ["Ne", "Ar", "Kr", "He"], "ans": "Ne"},
-        {"name": "Sodium", "q": "Atomic Number 11: Soft metal that explodes in water.", "options": ["Li", "K", "Na", "Mg"], "ans": "Na"},
-        {"name": "Magnesium", "q": "Produces a bright white light when burned (No. 12).", "options": ["Al", "Mg", "Ca", "Na"], "ans": "Mg"},
-        {"name": "Aluminum", "q": "The most abundant metal in Earth's crust (No. 13).", "options": ["Fe", "Sn", "Al", "Cu"], "ans": "Al"},
-        {"name": "Silicon", "q": "The semi-conductor with 14 protons.", "options": ["C", "Ge", "Si", "As"], "ans": "Si"},
-        {"name": "Phosphorus", "q": "Element No. 15 found in DNA and matchsticks.", "options": ["S", "N", "P", "K"], "ans": "P"},
-        {"name": "Sulfur", "q": "Yellow non-metal (No. 16) with a rotten egg smell.", "options": ["P", "Cl", "S", "Se"], "ans": "S"},
-        {"name": "Chlorine", "q": "The Halogen (No. 17) used in swimming pools.", "options": ["F", "Cl", "Br", "I"], "ans": "Cl"},
-        {"id": 18, "name": "Argon", "q": "Noble Gas with Atomic Number 18.", "options": ["Ne", "He", "Ar", "Kr"], "ans": "Ar"},
-        {"id": 19, "name": "Potassium", "q": "Group 1 metal (No. 19) found in bananas.", "options": ["Na", "K", "Li", "Rb"], "ans": "K"},
-        {"id": 20, "name": "Calcium", "q": "Metal in bones and milk with 20 protons.", "options": ["Mg", "Ca", "Ba", "Sr"], "ans": "Ca"}
-    ]
+# 3. 8-Level Categorized Database
+if 'levels_data' not in st.session_state:
+    st.session_state.levels_data = {
+        1: {"name": "Atomic Fundamentals", "focus": "Atomic Number & Mass", "data": [
+            {"q": "Which element has an Atomic Number of 6 and a Mass of 12.01?", "options": ["N", "C", "O", "B"], "ans": "C"},
+            {"q": "Identify the element with exactly 8 protons in its nucleus.", "options": ["He", "O", "N", "F"], "ans": "O"},
+            {"q": "Which element has the lowest Relative Atomic Mass (1.008)?", "options": ["H", "He", "Li", "O"], "ans": "H"},
+            {"q": "Atomic Number 11 belongs to which reactive element?", "options": ["K", "Mg", "Na", "Li"], "ans": "Na"},
+            {"q": "What is the mass of Helium to the nearest whole number?", "options": ["1", "2", "4", "8"], "ans": "4"}
+        ]},
+        2: {"name": "The Metal Gate", "focus": "Alkali & Alkaline Earth Metals", "data": [
+            {"q": "Which Group 1 metal is found in bananas (No. 19)?", "options": ["Na", "K", "Li", "Rb"], "ans": "K"},
+            {"q": "Which metal burns with a bright white flame (No. 12)?", "options": ["Ca", "Mg", "Al", "Be"], "ans": "Mg"},
+            {"id": 20, "q": "Which Group 2 metal is essential for bone health?", "options": ["Mg", "Ca", "Ba", "Sr"], "ans": "Ca"},
+            {"q": "Identify the Group 1 element used in rechargeable batteries.", "options": ["Li", "Na", "K", "Cs"], "ans": "Li"},
+            {"q": "Which of these is NOT an Alkaline Earth Metal?", "options": ["Be", "Mg", "Ca", "Na"], "ans": "Na"}
+        ]},
+        3: {"name": "Non-Metal Territory", "focus": "Gases & Life Elements", "data": [
+            {"q": "Which gas makes up the majority of Earth's atmosphere?", "options": ["O", "N", "H", "Ar"], "ans": "N"},
+            {"q": "Which non-metal is a yellow solid with a strong smell?", "options": ["P", "S", "Cl", "Se"], "ans": "S"},
+            {"q": "Which element is the primary component of diamonds?", "options": ["Si", "C", "B", "P"], "ans": "C"},
+            {"q": "Which non-metal is found in matchsticks (No. 15)?", "options": ["S", "N", "P", "K"], "ans": "P"},
+            {"q": "Which gas is essential for human aerobic respiration?", "options": ["CO2", "N", "O", "He"], "ans": "O"}
+        ]},
+        4: {"name": "The Metalloid Bridge", "focus": "Semi-Conductors", "data": [
+            {"q": "Which metalloid is the primary material in computer chips?", "options": ["Ge", "Si", "As", "B"], "ans": "Si"},
+            {"q": "Which metalloid has Atomic Number 5?", "options": ["B", "Al", "Si", "C"], "ans": "B"},
+            {"q": "Identify the element that acts as both a metal and non-metal.", "options": ["Al", "Si", "S", "P"], "ans": "Si"},
+            {"q": "Which element in Period 4 is a known metalloid?", "options": ["Ga", "Ge", "As", "Se"], "ans": "Ge"},
+            {"q": "Metalloids are located along which feature of the table?", "options": ["Group 1", "The Staircase", "Period 7", "The Bottom"], "ans": "The Staircase"}
+        ]}
+        # Levels 5-8: Halogens, Noble Gases, Transition Metals, and Periods/Groups review
+    }
 
-# 4. Custom CSS (Animated Background + Wheel Layout)
+# 4. Global CSS & Background
 st.markdown("""
 <style>
 @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-.stApp {
-    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #0f0c29);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-}
-.main-title { text-align: center; color: #00d2ff; font-size: 45px; font-weight: 800; text-shadow: 0 0 10px #00d2ff; }
+.stApp { background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e); background-size: 400% 400%; animation: gradientBG 15s ease infinite; }
 .wheel-container { display: flex; justify-content: center; align-items: center; height: 380px; position: relative; }
 .wheel {
     width: 300px; height: 300px; border-radius: 50%; border: 10px solid #FFD700;
     position: relative; overflow: hidden;
-    background: conic-gradient(
-        #FF4136 0% 5%, #0074D9 5% 10%, #2ECC40 10% 15%, #FFDC00 15% 20%, #B10DC9 20% 25%,
-        #FF851B 25% 30%, #7FDBFF 30% 35%, #3D9970 35% 40%, #F012BE 40% 45%, #AAAAAA 45% 50%,
-        #FF4136 50% 55%, #0074D9 55% 60%, #2ECC40 60% 65%, #FFDC00 65% 70%, #B10DC9 70% 75%,
-        #FF851B 75% 80%, #7FDBFF 80% 85%, #3D9970 85% 90%, #F012BE 90% 95%, #AAAAAA 95% 100%
-    );
+    background: conic-gradient(#FF4136 0% 5%, #0074D9 5% 10%, #2ECC40 10% 15%, #FFDC00 15% 20%, #B10DC9 20% 25%, #FF851B 25% 30%, #7FDBFF 30% 35%, #3D9970 35% 40%, #F012BE 40% 45%, #AAAAAA 45% 50%, #FF4136 50% 55%, #0074D9 55% 60%, #2ECC40 60% 65%, #FFDC00 65% 70%, #B10DC9 70% 75%, #FF851B 75% 80%, #7FDBFF 80% 85%, #3D9970 85% 90%, #F012BE 90% 95%, #AAAAAA 95% 100%);
     transition: transform 4s cubic-bezier(0.1, 0, 0, 1);
 }
 .wheel-pointer { position: absolute; top: 20px; width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 45px solid #FFD700; z-index: 10; }
 .wheel-num { position: absolute; font-weight: bold; color: white; font-size: 16px; pointer-events: none; }
-.stButton>button { background: linear-gradient(45deg, #00d2ff, #3a7bd5); color: white; border-radius: 10px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# 5. Audio Trigger Logic
+# 5. Audio Setup
 def play_audio(url):
     if not st.session_state.mute:
         st.markdown(f'<audio src="{url}" autoplay style="display:none"></audio>', unsafe_allow_html=True)
 
-# Continuous Ambient Background
 if not st.session_state.mute:
-    st.markdown('<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" autoplay loop style="display:none"></audio>', unsafe_allow_html=True)
+    st.markdown('<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" autoplay loop style="display:none"></audio>', unsafe_allow_html=True)
 
-# 6. Global Session State
+# 6. Session State
 if 'level' not in st.session_state: st.session_state.level = 1
 if 'score' not in st.session_state: st.session_state.score = 0
 if 'mode' not in st.session_state: st.session_state.mode = "spin"
-if 'answered_count' not in st.session_state: st.session_state.answered_count = 0
+if 'q_idx' not in st.session_state: st.session_state.q_idx = 0
 if 'rotation' not in st.session_state: st.session_state.rotation = 0
-if 'session_pool' not in st.session_state: st.session_state.session_pool = st.session_state.master_bank.copy()
 
 def get_wheel_html(rotation):
     nums = "".join([f'<div class="wheel-num" style="top:50%; left:50%; transform: translate(-50%, -50%) rotate({i*18-9}deg) translateY(-120px) rotate(-{i*18-9}deg);">{i}</div>' for i in range(1, 21)])
     return f'<div class="wheel-container"><div class="wheel-pointer"></div><div class="wheel" style="transform: rotate({rotation}deg);">{nums}</div></div>'
 
 # --- INTERFACE ---
-st.markdown('<h1 class="main-title">🧪 Periodic Master: Spin Quest</h1>', unsafe_allow_html=True)
-
-# Instructions
-with st.expander("📖 HOW TO PLAY"):
-    st.write("1. Spin the wheel to select a random element challenge.")
-    st.write("2. Analyze the chemical description carefully.")
-    st.write("3. Select the correct Chemical Symbol to earn 10 points.")
-    st.write("4. Complete 10 unique challenges to finish the level!")
+st.markdown('<h1 style="text-align:center; color:#00d2ff;">🧪 Periodic Master: Spin Quest</h1>', unsafe_allow_html=True)
 
 if st.session_state.mode == "spin":
-    st.write(f"### 📍 Progress: **{st.session_state.answered_count}/10** Questions Complete")
+    lvl_data = st.session_state.levels_data[st.session_state.level]
+    st.write(f"### 📍 Level {st.session_state.level}: {lvl_data['name']}")
+    st.info(f"**Focus Area:** {lvl_data['focus']} | Questions: {st.session_state.q_idx}/5")
+    
     wheel_placeholder = st.empty()
     wheel_placeholder.markdown(get_wheel_html(st.session_state.rotation), unsafe_allow_html=True)
     
     if st.button("🚀 SPIN FOR A CHALLENGE", use_container_width=True):
         play_audio("https://www.soundjay.com/misc/sounds/spinning-wheel-1.mp3")
         
-        # LOGIC: Pick a random element from the pool (Identity Hidden)
-        target_q = random.choice(st.session_state.session_pool)
-        st.session_state.current_q = target_q
-        
-        # LOGIC: Move wheel to a RANDOM slot (Disconnected from Atomic Number)
+        # Move wheel to a RANDOM slot (1-20)
         random_slot = random.randint(1, 20)
         target_stop = -( (random_slot - 1) * 18 + 9 )
         st.session_state.rotation += 1800 + (target_stop - (st.session_state.rotation % 360))
         
         wheel_placeholder.markdown(get_wheel_html(st.session_state.rotation), unsafe_allow_html=True)
-        with st.status("Isolating Atomic Data...") as status:
+        with st.status("Fetching Chemical Data...") as status:
             time.sleep(4)
             status.update(label=f"🎯 Target Locked at Slot {random_slot}!", state="complete")
         st.session_state.mode = "quiz"
         st.rerun()
 
 elif st.session_state.mode == "quiz":
-    q = st.session_state.current_q
-    st.subheader("🔍 Hidden Element Challenge")
-    st.info(f"**Description:** {q['q']}")
+    lvl = st.session_state.levels_data[st.session_state.level]
+    q = lvl["data"][st.session_state.q_idx]
     
-    ans = st.radio("What is the Chemical Symbol for this element?", q['options'], index=None)
+    st.subheader(f"🔍 Level {st.session_state.level} Challenge")
+    st.info(f"**Question:** {q['q']}")
+    ans = st.radio("Select the correct Chemical Symbol/Value:", q['options'], index=None)
     
-    if st.button("SUBMIT ANALYSIS"):
+    if st.button("SUBMIT DATA"):
         if ans == q["ans"]:
-            st.success(f"✅ CORRECT! This is **{q['name']}**.")
+            st.success("✅ CORRECT! Analysis Verified.")
             play_audio("https://www.soundjay.com/buttons/sounds/button-3.mp3")
-            st.session_state.score += 10
+            st.session_state.score += 20
         else:
-            st.error(f"❌ INCORRECT. This was **{q['name']}** ({q['ans']}).")
+            st.error(f"❌ INCORRECT. The correct answer was: {q['ans']}")
             play_audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
         
-        st.session_state.session_pool.remove(q)
-        st.session_state.answered_count += 1
-        time.sleep(2.5)
+        st.session_state.q_idx += 1
+        time.sleep(2)
         
-        if st.session_state.answered_count < 10:
+        if st.session_state.q_idx < 5:
+            st.session_state.mode = "spin"
+        else:
+            st.session_state.mode = "review"
+        st.rerun()
+
+elif st.session_state.mode == "review":
+    st.header(f"🏁 Level {st.session_state.level} Results")
+    st.metric("Score", f"{st.session_state.score} pts")
+    if st.button("Proceed to Next Chemical Gate"):
+        if st.session_state.level < 4:
+            st.session_state.level += 1
+            st.session_state.q_idx = 0
             st.session_state.mode = "spin"
         else:
             st.session_state.mode = "end"
@@ -145,13 +146,14 @@ elif st.session_state.mode == "quiz":
 
 elif st.session_state.mode == "end":
     st.balloons()
-    st.header("🏆 MASTER CHEMIST EVALUATION COMPLETE")
-    st.metric("Final Proficiency Score", f"{st.session_state.score} / 100")
-    if st.button("Start New Session"):
-        st.session_state.answered_count = 0
+    st.header("🏆 MASTER CHEMIST CERTIFIED")
+    st.metric("Final Total Score", f"{st.session_state.score} pts")
+    if st.button("Restart Journey"):
+        st.session_state.level = 1
         st.session_state.score = 0
-        st.session_state.session_pool = st.session_state.master_bank.copy()
+        st.session_state.q_idx = 0
         st.session_state.mode = "spin"
         st.rerun()
 
 st.markdown('<div style="text-align:center; padding-top:40px; color:#aaa; font-style:italic;">Game Developed by Ukazim Chidinma Favour</div>', unsafe_allow_html=True)
+        
