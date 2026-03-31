@@ -2,143 +2,119 @@ import streamlit as st
 import time
 import random
 
-# --- 1. ADAPTIVE THEME & ADVENTURE UI ---
-st.set_page_config(page_title="Ion Escape Room", page_icon="🏃‍♂️", layout="wide")
+# --- 1. SETTING THE SCENE (Cyber-Chemistry Theme) ---
+st.set_page_config(page_title="Ionic Pulse", page_icon="⚡", layout="wide")
 
 st.markdown("""
     <style>
-    /* System Adaptive Glassmorphism */
-    .stApp {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #e94560;
-    }
-    .game-card {
-        background: rgba(255, 255, 255, 0.07);
-        backdrop-filter: blur(15px);
+    .stApp { background: #050505; color: #00ffcc; }
+    .pulse-container {
+        border: 2px solid #00ffcc;
         border-radius: 20px;
-        padding: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-    }
-    .timer-digital {
-        font-family: 'Courier New', monospace;
-        font-size: 50px;
-        color: #00d4ff;
-        text-shadow: 0 0 10px #00d4ff;
+        padding: 40px;
         text-align: center;
+        background: rgba(0, 255, 204, 0.05);
+        box-shadow: 0 0 20px #00ffcc;
     }
-    .ion-profile {
-        background: #0f3460;
-        padding: 15px;
-        border-radius: 10px;
-        border-bottom: 4px solid #e94560;
-    }
+    .ion-float { font-size: 50px; font-weight: bold; text-shadow: 0 0 10px #fff; }
+    .timer-bar { font-size: 60px; font-family: 'Orbitron', sans-serif; color: #ff0055; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SS2 ION DATABASE ---
-if 'level' not in st.session_state: st.session_state.level = 0
+# --- 2. THE SOUND ENGINE (Embedded HTML5) ---
+def play_sound(type):
+    if type == "success":
+        # High pitch beep
+        st.components.v1.html("""
+            <audio autoplay><source src="https://actions.google.com/sounds/v1/foley/beeps_short_high.ogg" type="audio/ogg"></audio>
+        """, height=0)
+    elif type == "fail":
+        # Low buzz
+        st.components.v1.html("""
+            <audio autoplay><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg"></audio>
+        """, height=0)
+
+# --- 3. GAME STATE ---
 if 'score' not in st.session_state: st.session_state.score = 0
-if 'game_state' not in st.session_state: st.session_state.game_state = "start"
+if 'health' not in st.session_state: st.session_state.health = 100
+if 'playing' not in st.session_state: st.session_state.playing = False
 
-levels = [
-    {
-        "ion": "Cu²⁺ (Copper Ion)",
-        "location": "Aqueous Copper(II) Sulfate Solution",
-        "rivals": "H⁺ (Hydrogen Ion)",
-        "goal": "Reach the Cathode and become Copper Metal.",
-        "options": ["Low Concentration / Carbon Electrode", "High Concentration / Copper Electrode", "Dilute / Platinum Electrode"],
-        "correct": "High Concentration / Copper Electrode",
-        "why": "Cu²⁺ is lower in the electrochemical series than H⁺, and using a Copper electrode (active) facilitates discharge!"
-    },
-    {
-        "ion": "OH⁻ (Hydroxide Ion)",
-        "location": "Dilute Sodium Chloride (Brine)",
-        "rivals": "Cl⁻ (Chloride Ion)",
-        "goal": "Reach the Anode and become Oxygen Gas.",
-        "options": ["Very Concentrated Brine", "Dilute Brine / Graphite Electrode", "Molten NaCl"],
-        "correct": "Dilute Brine / Graphite Electrode",
-        "why": "In dilute solutions, OH⁻ is discharged in preference to Cl⁻ because it is higher in the series of anions."
-    }
-]
+# --- 4. GAME HEADER ---
+st.title("⚡ IONIC PULSE: SS2 DEFENDER")
+col1, col2 = st.columns(2)
+col1.metric("CURRENT FLOW (HEALTH)", f"{st.session_state.health}%")
+col2.metric("VOLTAGE SCORE", st.session_state.score)
 
-# --- 3. GAME SCREENS ---
-
-if st.session_state.game_state == "start":
-    st.markdown("<h1 style='text-align:center;'>🏃‍♂️ ION ESCAPE ROOM</h1>", unsafe_allow_html=True)
+# --- 5. THE GAMEPLAY LOOP ---
+if not st.session_state.playing:
     st.markdown("""
-    <div class='game-card'>
-    <h3>The Situation:</h3>
-    <p>You are an <b>Ion</b> dissolved in a liquid. The battery has just been turned on! 
-    You have <b>30 seconds</b> to navigate the chemical conditions and reach the electrode to be discharged.</p>
-    <p>If you choose the wrong path, your rival ion will escape instead, and you stay trapped in the solution forever!</p>
+    <div class='pulse-container'>
+        <h2>INSTRUCTIONS</h2>
+        <p>1. An Ion will appear at the center of the tank.</p>
+        <p>2. You have <b>5 seconds</b> per ion to decide which electrode it belongs to.</p>
+        <p>3. If you miss or choose wrong, the circuit breaks!</p>
+        <p><i>(Turn your volume UP for game sounds)</i></p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("BEGIN ESCAPE"):
-        st.session_state.game_state = "playing"
+    if st.button("🔌 PLUG IN & START"):
+        st.session_state.playing = True
         st.rerun()
 
-elif st.session_state.game_state == "playing":
-    lvl = levels[st.session_state.level]
+else:
+    # Randomly pick an Ion from SS2 Curriculum
+    ion_list = [
+        {"name": "Cu²⁺", "type": "Cation", "target": "Cathode (-)", "fact": "Copper ions are reduced to metal."},
+        {"name": "Cl⁻", "type": "Anion", "target": "Anode (+)", "fact": "Chloride ions are oxidized to gas."},
+        {"name": "H⁺", "type": "Cation", "target": "Cathode (-)", "fact": "Hydrogen ions form gas bubbles."},
+        {"name": "SO₄²⁻", "type": "Anion", "target": "Stay in Solution", "fact": "Sulfate ions are usually not discharged in dilute soln."}
+    ]
     
-    col_info, col_timer = st.columns([2, 1])
+    current_ion = random.choice(ion_list)
     
-    with col_info:
-        st.markdown(f"""
-        <div class='ion-profile'>
-            <h2>Identity: {lvl['ion']}</h2>
-            <p><b>Environment:</b> {lvl['location']}</p>
-            <p><b>Rival Ion:</b> {lvl['rivals']}</p>
-            <p><b>Mission:</b> {lvl['goal']}</p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f"<div class='pulse-container'><div class='ion-float'>{current_ion['name']}</div></div>", unsafe_allow_html=True)
+    
+    # 30-Second Overall Session Timer (Visual Countdown)
+    timer_place = st.empty()
+    
+    st.write("### WHERE DOES THIS ION GO?")
+    c1, c2, c3 = st.columns(3)
+    
+    # Action Buttons
+    btn_anode = c1.button("ANODE (+)")
+    btn_sol = c2.button("STAY IN SOLUTION")
+    btn_cath = c3.button("CATHODE (-)")
 
-    with col_timer:
-        timer_place = st.empty()
-    
-    st.write("---")
-    st.subheader("Choose your escape route:")
-    choice = st.radio("Which lab conditions will allow YOU to be discharged?", lvl['options'])
-    
-    escape_btn = st.button("RUN TO THE ELECTRODE ⚡")
+    # Check Logic
+    user_choice = None
+    if btn_anode: user_choice = "Anode (+)"
+    if btn_sol: user_choice = "Stay in Solution"
+    if btn_cath: user_choice = "Cathode (-)"
 
-    # The 30s Countdown
-    if not escape_btn:
-        for t in range(30, -1, -1):
-            timer_place.markdown(f"<div class='timer-digital'>{t}s</div>", unsafe_allow_html=True)
+    if user_choice:
+        if user_choice == current_ion['target']:
+            st.session_state.score += 10
+            play_sound("success")
+            st.success(f"CORRECT! {current_ion['fact']}")
             time.sleep(1)
-            if t == 0:
-                st.error("⏰ THE POWER CUT OUT! You are trapped in the liquid.")
-                if st.button("Restart Level"): st.rerun()
-                st.stop()
-
-    if escape_btn:
-        if choice == lvl['correct']:
-            st.balloons()
-            st.success("🎉 ESCAPE SUCCESSFUL! You have been discharged.")
-            st.info(f"<b>Chemistry Logic:</b> {lvl['why']}")
-            st.session_state.score += 100
-            
-            if st.session_state.level < len(levels) - 1:
-                if st.button("Next Level"):
-                    st.session_state.level += 1
-                    st.rerun()
-            else:
-                st.session_state.game_state = "won"
-                st.rerun()
+            st.rerun()
         else:
-            st.error("❌ FAILED! Your rival was discharged instead. You remain an ion.")
-            st.warning("Hint: Look at the Electrochemical Series. Which ion is easier to reduce/oxidize?")
-            if st.button("Try Again"): st.rerun()
+            st.session_state.health -= 20
+            play_sound("fail")
+            st.error("CIRCUIT BREACH! Wrong Electrode.")
+            time.sleep(1)
+            if st.session_state.health <= 0:
+                st.session_state.playing = False
+                st.session_state.health = 100
+                st.write("💀 LAB BLACKOUT. GAME OVER.")
+            st.rerun()
 
-elif st.session_state.game_state == "won":
-    st.markdown("<div class='game-card' style='text-align:center;'>", unsafe_allow_html=True)
-    st.title("🎓 MASTER OF IONS")
-    st.write(f"You escaped every solution! Final Score: {st.session_state.score}")
-    if st.button("Replay Game"):
-        st.session_state.level = 0
-        st.session_state.score = 0
-        st.session_state.game_state = "start"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Automatic Timeout for the specific ion
+    for t in range(5, 0, -1):
+        timer_place.markdown(f"<div class='timer-bar'>⚡ {t}</div>", unsafe_allow_html=True)
+        time.sleep(0.5) # Fast paced
+    
+    # If no choice made
+    st.session_state.health -= 10
+    play_sound("fail")
+    st.rerun()
     
