@@ -3,13 +3,13 @@ import random
 import time
 
 # 1. Page Configuration
-st.set_page_config(page_title="Periodic Master", page_icon="🧪", layout="wide")
+st.set_page_config(page_title="Periodic Master: Spin Quest", page_icon="🧪", layout="wide")
 
-# 2. Sidebar Controls
-st.sidebar.title("⚙️ Lab Settings")
+# 2. Sidebar Controls (Sound Toggle)
+st.sidebar.title("🎮 Lab Controls")
 st.session_state.mute = st.sidebar.toggle("Mute All Sounds", value=False)
 
-# 3. Master Question Bank (20 Elements)
+# 3. Master Question Bank (20 Elements - Hidden Names)
 if 'master_bank' not in st.session_state:
     st.session_state.master_bank = [
         {"name": "Hydrogen", "q": "Which element is the lightest gas with 1 proton?", "options": ["H", "He", "Li", "Be"], "ans": "H"},
@@ -23,18 +23,18 @@ if 'master_bank' not in st.session_state:
         {"name": "Fluorine", "q": "The most reactive Halogen with 9 protons.", "options": ["Cl", "F", "Br", "I"], "ans": "F"},
         {"name": "Neon", "q": "Noble Gas No. 10 that glows orange-red.", "options": ["Ne", "Ar", "Kr", "He"], "ans": "Ne"},
         {"name": "Sodium", "q": "Atomic Number 11: Soft metal that explodes in water.", "options": ["Li", "K", "Na", "Mg"], "ans": "Na"},
-        {"name": "Magnesium", "q": "Burned in lab to produce a bright white light (No. 12).", "options": ["Al", "Mg", "Ca", "Na"], "ans": "Mg"},
+        {"name": "Magnesium", "q": "Produces a bright white light when burned (No. 12).", "options": ["Al", "Mg", "Ca", "Na"], "ans": "Mg"},
         {"name": "Aluminum", "q": "The most abundant metal in Earth's crust (No. 13).", "options": ["Fe", "Sn", "Al", "Cu"], "ans": "Al"},
         {"name": "Silicon", "q": "The semi-conductor with 14 protons.", "options": ["C", "Ge", "Si", "As"], "ans": "Si"},
         {"name": "Phosphorus", "q": "Element No. 15 found in DNA and matchsticks.", "options": ["S", "N", "P", "K"], "ans": "P"},
         {"name": "Sulfur", "q": "Yellow non-metal (No. 16) with a rotten egg smell.", "options": ["P", "Cl", "S", "Se"], "ans": "S"},
         {"name": "Chlorine", "q": "The Halogen (No. 17) used in swimming pools.", "options": ["F", "Cl", "Br", "I"], "ans": "Cl"},
-        {"name": "Argon", "q": "Noble Gas with Atomic Number 18.", "options": ["Ne", "He", "Ar", "Kr"], "ans": "Ar"},
-        {"name": "Potassium", "q": "Group 1 metal (No. 19) found in bananas.", "options": ["Na", "K", "Li", "Rb"], "ans": "K"},
-        {"name": "Calcium", "q": "The metal in bones and milk with 20 protons.", "options": ["Mg", "Ca", "Ba", "Sr"], "ans": "Calcium"}
+        {"id": 18, "name": "Argon", "q": "Noble Gas with Atomic Number 18.", "options": ["Ne", "He", "Ar", "Kr"], "ans": "Ar"},
+        {"id": 19, "name": "Potassium", "q": "Group 1 metal (No. 19) found in bananas.", "options": ["Na", "K", "Li", "Rb"], "ans": "K"},
+        {"id": 20, "name": "Calcium", "q": "Metal in bones and milk with 20 protons.", "options": ["Mg", "Ca", "Ba", "Sr"], "ans": "Ca"}
     ]
 
-# 4. Sound & Animation CSS
+# 4. Custom CSS (Animated Background + Wheel Layout)
 st.markdown("""
 <style>
 @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
@@ -58,15 +58,16 @@ st.markdown("""
 }
 .wheel-pointer { position: absolute; top: 20px; width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 45px solid #FFD700; z-index: 10; }
 .wheel-num { position: absolute; font-weight: bold; color: white; font-size: 16px; pointer-events: none; }
+.stButton>button { background: linear-gradient(45deg, #00d2ff, #3a7bd5); color: white; border-radius: 10px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# 5. Audio Functionality
+# 5. Audio Trigger Logic
 def play_audio(url):
     if not st.session_state.mute:
         st.markdown(f'<audio src="{url}" autoplay style="display:none"></audio>', unsafe_allow_html=True)
 
-# Background Music
+# Continuous Ambient Background
 if not st.session_state.mute:
     st.markdown('<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" autoplay loop style="display:none"></audio>', unsafe_allow_html=True)
 
@@ -85,27 +86,34 @@ def get_wheel_html(rotation):
 # --- INTERFACE ---
 st.markdown('<h1 class="main-title">🧪 Periodic Master: Spin Quest</h1>', unsafe_allow_html=True)
 
+# Instructions
+with st.expander("📖 HOW TO PLAY"):
+    st.write("1. Spin the wheel to select a random element challenge.")
+    st.write("2. Analyze the chemical description carefully.")
+    st.write("3. Select the correct Chemical Symbol to earn 10 points.")
+    st.write("4. Complete 10 unique challenges to finish the level!")
+
 if st.session_state.mode == "spin":
-    st.write(f"### 📍 Level {st.session_state.level} | Questions: **{st.session_state.answered_count}/10**")
+    st.write(f"### 📍 Progress: **{st.session_state.answered_count}/10** Questions Complete")
     wheel_placeholder = st.empty()
     wheel_placeholder.markdown(get_wheel_html(st.session_state.rotation), unsafe_allow_html=True)
     
-    if st.button("🚀 SPIN TO DISCOVER ELEMENT", use_container_width=True):
+    if st.button("🚀 SPIN FOR A CHALLENGE", use_container_width=True):
         play_audio("https://www.soundjay.com/misc/sounds/spinning-wheel-1.mp3")
         
-        # Pick random element (Identity Hidden)
+        # LOGIC: Pick a random element from the pool (Identity Hidden)
         target_q = random.choice(st.session_state.session_pool)
         st.session_state.current_q = target_q
         
-        # Pick random slot on wheel (Doesn't have to match Atomic Number)
+        # LOGIC: Move wheel to a RANDOM slot (Disconnected from Atomic Number)
         random_slot = random.randint(1, 20)
         target_stop = -( (random_slot - 1) * 18 + 9 )
         st.session_state.rotation += 1800 + (target_stop - (st.session_state.rotation % 360))
         
         wheel_placeholder.markdown(get_wheel_html(st.session_state.rotation), unsafe_allow_html=True)
-        with st.status("Isolating Element Data...") as status:
+        with st.status("Isolating Atomic Data...") as status:
             time.sleep(4)
-            status.update(label=f"🎯 Target Acquired at Slot {random_slot}!", state="complete")
+            status.update(label=f"🎯 Target Locked at Slot {random_slot}!", state="complete")
         st.session_state.mode = "quiz"
         st.rerun()
 
@@ -114,22 +122,20 @@ elif st.session_state.mode == "quiz":
     st.subheader("🔍 Hidden Element Challenge")
     st.info(f"**Description:** {q['q']}")
     
-    # Randomize the display order of options
-    ans_options = q['options']
-    ans = st.radio("What is the Chemical Symbol for this element?", ans_options, index=None)
+    ans = st.radio("What is the Chemical Symbol for this element?", q['options'], index=None)
     
     if st.button("SUBMIT ANALYSIS"):
         if ans == q["ans"]:
-            st.success("✅ CORRECT! Atomic Data verified.")
+            st.success(f"✅ CORRECT! This is **{q['name']}**.")
             play_audio("https://www.soundjay.com/buttons/sounds/button-3.mp3")
             st.session_state.score += 10
         else:
-            st.error(f"❌ INCORRECT. The correct symbol was: {q['ans']}")
+            st.error(f"❌ INCORRECT. This was **{q['name']}** ({q['ans']}).")
             play_audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
         
         st.session_state.session_pool.remove(q)
         st.session_state.answered_count += 1
-        time.sleep(2)
+        time.sleep(2.5)
         
         if st.session_state.answered_count < 10:
             st.session_state.mode = "spin"
@@ -149,4 +155,3 @@ elif st.session_state.mode == "end":
         st.rerun()
 
 st.markdown('<div style="text-align:center; padding-top:40px; color:#aaa; font-style:italic;">Game Developed by Ukazim Chidinma Favour</div>', unsafe_allow_html=True)
-        
