@@ -1,118 +1,152 @@
 import streamlit as st
 import time
 
-# --- 1. PAGE CONFIG & THEME ---
-st.set_page_config(page_title="Electrolysis Tycoon", page_icon="🏭", layout="wide")
+# --- 1. THEME & SYSTEM ADAPTIVE UI ---
+st.set_page_config(page_title="SS2 Electrolysis Lab", page_icon="🧪", layout="wide")
 
-# Beautiful Laboratory Styling
 st.markdown("""
     <style>
-    .reportview-container { background: #f0f2f6; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-    .job-card { background-color: #e3f2fd; padding: 20px; border-radius: 15px; border-left: 10px solid #1976d2; margin-bottom: 20px; }
-    .status-text { font-family: 'Courier New', monospace; font-weight: bold; }
+    /* Adapts to Light/Dark Mode automatically */
+    .main { padding: 2rem; }
+    .stAlert { border-radius: 12px; }
+    .lab-header { 
+        background: linear-gradient(90deg, #2e7d32, #1b5e20); 
+        color: white; 
+        padding: 20px; 
+        border-radius: 15px; 
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .timer-display {
+        font-size: 45px;
+        font-family: 'Courier New', Courier, monospace;
+        color: #d32f2f;
+        text-align: center;
+        font-weight: bold;
+    }
+    .equation-box {
+        background-color: rgba(0,0,0,0.05);
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #2e7d32;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SESSION STATE ---
-if 'money' not in st.session_state: st.session_state.money = 500
-if 'level' not in st.session_state: st.session_state.level = 1
-if 'log' not in st.session_state: st.session_state.log = []
+# --- 2. SS2 CURRICULUM DATABASE ---
+if 'level' not in st.session_state: st.session_state.level = 0
+if 'score' not in st.session_state: st.session_state.score = 0
+if 'mode' not in st.session_state: st.session_state.mode = "instructions"
 
-# --- 3. LEVEL DATABASE ---
-jobs = {
-    1: {
-        "client": "Luxury Watches Inc.",
-        "task": "Gold-plate 50 Stainless Steel watch bands.",
-        "requirement": "Gold (Au)",
-        "correct": {"el": "Gold Cyanide", "an": "Pure Gold", "ca": "Steel Bands"},
-        "reward": 1000,
-        "hint": "The object to be coated (Steel) must be the Negative Cathode!"
+curriculum_tasks = [
+    {
+        "title": "Task 1: Electrolysis of Molten Lead(II) Bromide",
+        "description": "Demonstrate the decomposition of a molten binary compound.",
+        "correct": {"el": "Molten PbBr₂", "an": "Graphite", "ca": "Graphite"},
+        "result": "Lead metal at Cathode, Red-brown Bromine gas at Anode.",
+        "equation": "Cathode: Pb²⁺ + 2e⁻ → Pb(l)  |  Anode: 2Br⁻ → Br₂(g) + 2e⁻",
+        "points": 50
     },
-    2: {
-        "client": "Alu-Build Co.",
-        "task": "Extract pure Aluminum from Bauxite ore.",
-        "requirement": "Aluminum (Al)",
-        "correct": {"el": "Molten Alumina in Cryolite", "an": "Graphite", "ca": "Graphite"},
-        "reward": 2500,
-        "hint": "Aluminum extraction requires a very high temperature and molten (liquid) ore."
+    {
+        "title": "Task 2: Electrolysis of Acidified Water",
+        "description": "Using a Hoffmann Voltameter to produce Hydrogen and Oxygen.",
+        "correct": {"el": "Dilute H₂SO₄", "an": "Platinum", "ca": "Platinum"},
+        "result": "Hydrogen (2 volumes) at Cathode, Oxygen (1 volume) at Anode.",
+        "equation": "At Cathode: 4H⁺ + 4e⁻ → 2H₂(g)  |  At Anode: 4OH⁻ → 2H₂O + O₂ + 4e⁻",
+        "points": 100
+    },
+    {
+        "title": "Task 3: Electro-refining of Copper",
+        "description": "Purifying a sample of impure copper using active electrodes.",
+        "correct": {"el": "CuSO₄ solution", "an": "Impure Copper", "ca": "Pure Copper"},
+        "result": "The impure anode dissolves; pure copper coats the cathode.",
+        "equation": "Anode: Cu(s, impure) → Cu²⁺ + 2e⁻  |  Cathode: Cu²⁺ + 2e⁻ → Cu(s, pure)",
+        "points": 150
     }
-}
+]
 
-# --- 4. DASHBOARD ---
-st.title("🏭 Electrolysis Tycoon: Lab Director")
-col_stats1, col_stats2, col_stats3 = st.columns(3)
-col_stats1.metric("Available Funds", f"${st.session_state.money}")
-col_stats2.metric("Factory Level", f"LVL {st.session_state.level}")
-col_stats3.metric("Successful Exports", len([x for x in st.session_state.log if "Success" in x]))
+# --- 3. GAME SCREENS ---
 
-st.divider()
-
-# --- 5. THE ACTIVE JOB ---
-current_job = jobs[st.session_state.level]
-
-st.markdown(f"""
-<div class="job-card">
-    <h3>📩 NEW CONTRACT: {current_job['client']}</h3>
-    <p><b>Request:</b> {current_job['task']}</p>
-    <p style="color: #1976d2;"><i>Hint: {current_job['hint']}</i></p>
-</div>
-""", unsafe_allow_html=True)
-
-# --- 6. THE FACTORY FLOOR (Game Inputs) ---
-st.subheader("🛠️ Setup Your Reaction Tank")
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    electrolyte = st.selectbox("1. Fill Tank With (Electrolyte):", 
-        ["Distilled Water", "Gold Cyanide", "Molten Alumina in Cryolite", "Copper Sulfate"])
-
-with c2:
-    anode = st.selectbox("2. Install Anode (+):", 
-        ["Graphite", "Pure Gold", "Iron Rod", "Platinum"])
-
-with c3:
-    cathode = st.selectbox("3. Install Cathode (-):", 
-        ["Steel Bands", "Graphite", "Pure Aluminum Sheet", "Copper Strip"])
-
-# --- 7. START THE MACHINE ---
-if st.button("▶️ START PRODUCTION (30s Cycle)"):
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+# SCREEN A: INSTRUCTIONS
+if st.session_state.mode == "instructions":
+    st.markdown("<div class='lab-header'><h1>🧪 SS2 Chemistry: Electrolysis Practical</h1></div>", unsafe_allow_html=True)
+    st.info("### 📖 How to play:")
+    st.write("1. **Analyze the Experiment:** Read the curriculum task provided.")
+    st.write("2. **Spin & Select:** Choose the correct electrolyte and electrodes.")
+    st.write("3. **30s Timer:** You must initiate the reaction before the lab timer runs out.")
+    st.write("4. **Collect Results:** Correct setups earn points and show the chemical equations.")
     
-    # Check logic immediately but simulate time
-    is_correct = (electrolyte == current_job['correct']['el'] and 
-                  anode == current_job['correct']['an'] and 
-                  cathode == current_job['correct']['ca'])
+    if st.button("Enter the Lab"):
+        st.session_state.mode = "game"
+        st.rerun()
+
+# SCREEN B: THE LAB (GAME)
+elif st.session_state.mode == "game":
+    task = curriculum_tasks[st.session_state.level]
     
-    # 30-Second Countdown Animation
-    for percent in range(1, 101):
-        time.sleep(0.3) # Total 30 seconds
-        progress_bar.progress(percent)
-        remaining = 30 - int(percent * 0.3)
-        status_text.markdown(f"<p class='status-text'>⚡ Reacting... {remaining}s remaining</p>", unsafe_allow_html=True)
-    
-    if is_correct:
-        st.balloons()
-        st.success(f"📦 CONTRACT COMPLETE! You earned ${current_job['reward']}.")
-        st.session_state.money += current_job['reward']
-        st.session_state.log.append(f"Success: {current_job['client']}")
+    st.markdown(f"## {task['title']}")
+    st.write(f"**Objective:** {task['description']}")
+    st.divider()
+
+    col_setup, col_timer = st.columns([3, 1])
+
+    with col_setup:
+        st.subheader("🛠️ Lab Setup")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            u_el = st.selectbox("Select Electrolyte", ["Molten PbBr₂", "Dilute H₂SO₄", "CuSO₄ solution", "Brine (NaCl)"])
+        with c2:
+            u_an = st.selectbox("Select Anode (+)", ["Graphite", "Platinum", "Impure Copper", "Iron"])
+        with c3:
+            u_ca = st.selectbox("Select Cathode (-)", ["Graphite", "Platinum", "Pure Copper", "Steel Rod"])
         
-        if st.session_state.level < len(jobs):
-            if st.button("Accept Next Contract"):
-                st.session_state.level += 1
+        run_btn = st.button("⚡ Start Electrolysis")
+
+    with col_timer:
+        timer_placeholder = st.empty()
+        if not run_btn:
+            for t in range(30, -1, -1):
+                timer_placeholder.markdown(f"<div class='timer-display'>{t}s</div>", unsafe_allow_html=True)
+                time.sleep(1)
+                if t == 0:
+                    st.error("⏰ LAB TIMEOUT! The experiment failed.")
+                    if st.button("Reset Lab"): st.rerun()
+                    st.stop()
+
+    if run_btn:
+        st.markdown("---")
+        if u_el == task['correct']['el'] and u_an == task['correct']['an'] and u_ca == task['correct']['ca']:
+            st.balloons()
+            st.success(f"🎊 Practical Successful! You earned {task['points']} points.")
+            st.session_state.score += task['points']
+            
+            st.markdown("### 📊 Practical Observation")
+            st.write(task['result'])
+            
+            st.markdown("### 📝 Chemical Equations (Half-Reactions)")
+            st.markdown(f"<div class='equation-box'><code>{task['equation']}</code></div>", unsafe_allow_html=True)
+            
+            if st.session_state.level < len(curriculum_tasks) - 1:
+                if st.button("Next Experiment"):
+                    st.session_state.level += 1
+                    st.rerun()
+            else:
+                st.session_state.mode = "finish"
                 st.rerun()
         else:
-            st.write("🎉 You've completed all current industrial contracts!")
-    else:
-        st.error("💥 FACTORY ERROR: Wrong setup. The product was contaminated!")
-        st.warning(f"Technical Reason: For {current_job['requirement']}, you needed {current_job['correct']['el']}.")
-        st.session_state.money -= 200 # Penalty
-        if st.button("Clean Up Lab & Retry"):
-            st.rerun()
+            st.error("❌ Experiment Failed! Your setup does not match standard lab procedure.")
+            st.warning("Check your choice of electrodes. Remember: Inert electrodes (Graphite/Platinum) are used for simple decomposition!")
+            if st.button("Try Setup Again"):
+                st.rerun()
 
-# --- 8. LAB LOGS ---
-with st.expander("📋 View Factory Logs"):
-    for entry in st.session_state.log:
-        st.write(entry)
-        
+# SCREEN C: FINISH
+elif st.session_state.mode == "finish":
+    st.title("🎓 Lab Practical Certified")
+    st.write(f"Excellent work! You have completed the SS2 Electrolysis Curriculum.")
+    st.metric("Final Lab Score", f"{st.session_state.score} pts")
+    if st.button("Restart Curriculum"):
+        st.session_state.level = 0
+        st.session_state.score = 0
+        st.session_state.mode = "instructions"
+        st.rerun()
+
