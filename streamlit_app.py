@@ -1,152 +1,144 @@
 import streamlit as st
 import time
+import random
 
-# --- 1. THEME & SYSTEM ADAPTIVE UI ---
-st.set_page_config(page_title="SS2 Electrolysis Lab", page_icon="🧪", layout="wide")
+# --- 1. ADAPTIVE THEME & ADVENTURE UI ---
+st.set_page_config(page_title="Ion Escape Room", page_icon="🏃‍♂️", layout="wide")
 
 st.markdown("""
     <style>
-    /* Adapts to Light/Dark Mode automatically */
-    .main { padding: 2rem; }
-    .stAlert { border-radius: 12px; }
-    .lab-header { 
-        background: linear-gradient(90deg, #2e7d32, #1b5e20); 
-        color: white; 
-        padding: 20px; 
-        border-radius: 15px; 
-        text-align: center;
-        margin-bottom: 25px;
+    /* System Adaptive Glassmorphism */
+    .stApp {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #e94560;
     }
-    .timer-display {
-        font-size: 45px;
-        font-family: 'Courier New', Courier, monospace;
-        color: #d32f2f;
-        text-align: center;
-        font-weight: bold;
+    .game-card {
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
     }
-    .equation-box {
-        background-color: rgba(0,0,0,0.05);
+    .timer-digital {
+        font-family: 'Courier New', monospace;
+        font-size: 50px;
+        color: #00d4ff;
+        text-shadow: 0 0 10px #00d4ff;
+        text-align: center;
+    }
+    .ion-profile {
+        background: #0f3460;
         padding: 15px;
         border-radius: 10px;
-        border-left: 5px solid #2e7d32;
+        border-bottom: 4px solid #e94560;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SS2 CURRICULUM DATABASE ---
+# --- 2. SS2 ION DATABASE ---
 if 'level' not in st.session_state: st.session_state.level = 0
 if 'score' not in st.session_state: st.session_state.score = 0
-if 'mode' not in st.session_state: st.session_state.mode = "instructions"
+if 'game_state' not in st.session_state: st.session_state.game_state = "start"
 
-curriculum_tasks = [
+levels = [
     {
-        "title": "Task 1: Electrolysis of Molten Lead(II) Bromide",
-        "description": "Demonstrate the decomposition of a molten binary compound.",
-        "correct": {"el": "Molten PbBr₂", "an": "Graphite", "ca": "Graphite"},
-        "result": "Lead metal at Cathode, Red-brown Bromine gas at Anode.",
-        "equation": "Cathode: Pb²⁺ + 2e⁻ → Pb(l)  |  Anode: 2Br⁻ → Br₂(g) + 2e⁻",
-        "points": 50
+        "ion": "Cu²⁺ (Copper Ion)",
+        "location": "Aqueous Copper(II) Sulfate Solution",
+        "rivals": "H⁺ (Hydrogen Ion)",
+        "goal": "Reach the Cathode and become Copper Metal.",
+        "options": ["Low Concentration / Carbon Electrode", "High Concentration / Copper Electrode", "Dilute / Platinum Electrode"],
+        "correct": "High Concentration / Copper Electrode",
+        "why": "Cu²⁺ is lower in the electrochemical series than H⁺, and using a Copper electrode (active) facilitates discharge!"
     },
     {
-        "title": "Task 2: Electrolysis of Acidified Water",
-        "description": "Using a Hoffmann Voltameter to produce Hydrogen and Oxygen.",
-        "correct": {"el": "Dilute H₂SO₄", "an": "Platinum", "ca": "Platinum"},
-        "result": "Hydrogen (2 volumes) at Cathode, Oxygen (1 volume) at Anode.",
-        "equation": "At Cathode: 4H⁺ + 4e⁻ → 2H₂(g)  |  At Anode: 4OH⁻ → 2H₂O + O₂ + 4e⁻",
-        "points": 100
-    },
-    {
-        "title": "Task 3: Electro-refining of Copper",
-        "description": "Purifying a sample of impure copper using active electrodes.",
-        "correct": {"el": "CuSO₄ solution", "an": "Impure Copper", "ca": "Pure Copper"},
-        "result": "The impure anode dissolves; pure copper coats the cathode.",
-        "equation": "Anode: Cu(s, impure) → Cu²⁺ + 2e⁻  |  Cathode: Cu²⁺ + 2e⁻ → Cu(s, pure)",
-        "points": 150
+        "ion": "OH⁻ (Hydroxide Ion)",
+        "location": "Dilute Sodium Chloride (Brine)",
+        "rivals": "Cl⁻ (Chloride Ion)",
+        "goal": "Reach the Anode and become Oxygen Gas.",
+        "options": ["Very Concentrated Brine", "Dilute Brine / Graphite Electrode", "Molten NaCl"],
+        "correct": "Dilute Brine / Graphite Electrode",
+        "why": "In dilute solutions, OH⁻ is discharged in preference to Cl⁻ because it is higher in the series of anions."
     }
 ]
 
 # --- 3. GAME SCREENS ---
 
-# SCREEN A: INSTRUCTIONS
-if st.session_state.mode == "instructions":
-    st.markdown("<div class='lab-header'><h1>🧪 SS2 Chemistry: Electrolysis Practical</h1></div>", unsafe_allow_html=True)
-    st.info("### 📖 How to play:")
-    st.write("1. **Analyze the Experiment:** Read the curriculum task provided.")
-    st.write("2. **Spin & Select:** Choose the correct electrolyte and electrodes.")
-    st.write("3. **30s Timer:** You must initiate the reaction before the lab timer runs out.")
-    st.write("4. **Collect Results:** Correct setups earn points and show the chemical equations.")
-    
-    if st.button("Enter the Lab"):
-        st.session_state.mode = "game"
+if st.session_state.game_state == "start":
+    st.markdown("<h1 style='text-align:center;'>🏃‍♂️ ION ESCAPE ROOM</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='game-card'>
+    <h3>The Situation:</h3>
+    <p>You are an <b>Ion</b> dissolved in a liquid. The battery has just been turned on! 
+    You have <b>30 seconds</b> to navigate the chemical conditions and reach the electrode to be discharged.</p>
+    <p>If you choose the wrong path, your rival ion will escape instead, and you stay trapped in the solution forever!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("BEGIN ESCAPE"):
+        st.session_state.game_state = "playing"
         st.rerun()
 
-# SCREEN B: THE LAB (GAME)
-elif st.session_state.mode == "game":
-    task = curriculum_tasks[st.session_state.level]
+elif st.session_state.game_state == "playing":
+    lvl = levels[st.session_state.level]
     
-    st.markdown(f"## {task['title']}")
-    st.write(f"**Objective:** {task['description']}")
-    st.divider()
-
-    col_setup, col_timer = st.columns([3, 1])
-
-    with col_setup:
-        st.subheader("🛠️ Lab Setup")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            u_el = st.selectbox("Select Electrolyte", ["Molten PbBr₂", "Dilute H₂SO₄", "CuSO₄ solution", "Brine (NaCl)"])
-        with c2:
-            u_an = st.selectbox("Select Anode (+)", ["Graphite", "Platinum", "Impure Copper", "Iron"])
-        with c3:
-            u_ca = st.selectbox("Select Cathode (-)", ["Graphite", "Platinum", "Pure Copper", "Steel Rod"])
-        
-        run_btn = st.button("⚡ Start Electrolysis")
+    col_info, col_timer = st.columns([2, 1])
+    
+    with col_info:
+        st.markdown(f"""
+        <div class='ion-profile'>
+            <h2>Identity: {lvl['ion']}</h2>
+            <p><b>Environment:</b> {lvl['location']}</p>
+            <p><b>Rival Ion:</b> {lvl['rivals']}</p>
+            <p><b>Mission:</b> {lvl['goal']}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col_timer:
-        timer_placeholder = st.empty()
-        if not run_btn:
-            for t in range(30, -1, -1):
-                timer_placeholder.markdown(f"<div class='timer-display'>{t}s</div>", unsafe_allow_html=True)
-                time.sleep(1)
-                if t == 0:
-                    st.error("⏰ LAB TIMEOUT! The experiment failed.")
-                    if st.button("Reset Lab"): st.rerun()
-                    st.stop()
+        timer_place = st.empty()
+    
+    st.write("---")
+    st.subheader("Choose your escape route:")
+    choice = st.radio("Which lab conditions will allow YOU to be discharged?", lvl['options'])
+    
+    escape_btn = st.button("RUN TO THE ELECTRODE ⚡")
 
-    if run_btn:
-        st.markdown("---")
-        if u_el == task['correct']['el'] and u_an == task['correct']['an'] and u_ca == task['correct']['ca']:
+    # The 30s Countdown
+    if not escape_btn:
+        for t in range(30, -1, -1):
+            timer_place.markdown(f"<div class='timer-digital'>{t}s</div>", unsafe_allow_html=True)
+            time.sleep(1)
+            if t == 0:
+                st.error("⏰ THE POWER CUT OUT! You are trapped in the liquid.")
+                if st.button("Restart Level"): st.rerun()
+                st.stop()
+
+    if escape_btn:
+        if choice == lvl['correct']:
             st.balloons()
-            st.success(f"🎊 Practical Successful! You earned {task['points']} points.")
-            st.session_state.score += task['points']
+            st.success("🎉 ESCAPE SUCCESSFUL! You have been discharged.")
+            st.info(f"<b>Chemistry Logic:</b> {lvl['why']}")
+            st.session_state.score += 100
             
-            st.markdown("### 📊 Practical Observation")
-            st.write(task['result'])
-            
-            st.markdown("### 📝 Chemical Equations (Half-Reactions)")
-            st.markdown(f"<div class='equation-box'><code>{task['equation']}</code></div>", unsafe_allow_html=True)
-            
-            if st.session_state.level < len(curriculum_tasks) - 1:
-                if st.button("Next Experiment"):
+            if st.session_state.level < len(levels) - 1:
+                if st.button("Next Level"):
                     st.session_state.level += 1
                     st.rerun()
             else:
-                st.session_state.mode = "finish"
+                st.session_state.game_state = "won"
                 st.rerun()
         else:
-            st.error("❌ Experiment Failed! Your setup does not match standard lab procedure.")
-            st.warning("Check your choice of electrodes. Remember: Inert electrodes (Graphite/Platinum) are used for simple decomposition!")
-            if st.button("Try Setup Again"):
-                st.rerun()
+            st.error("❌ FAILED! Your rival was discharged instead. You remain an ion.")
+            st.warning("Hint: Look at the Electrochemical Series. Which ion is easier to reduce/oxidize?")
+            if st.button("Try Again"): st.rerun()
 
-# SCREEN C: FINISH
-elif st.session_state.mode == "finish":
-    st.title("🎓 Lab Practical Certified")
-    st.write(f"Excellent work! You have completed the SS2 Electrolysis Curriculum.")
-    st.metric("Final Lab Score", f"{st.session_state.score} pts")
-    if st.button("Restart Curriculum"):
+elif st.session_state.game_state == "won":
+    st.markdown("<div class='game-card' style='text-align:center;'>", unsafe_allow_html=True)
+    st.title("🎓 MASTER OF IONS")
+    st.write(f"You escaped every solution! Final Score: {st.session_state.score}")
+    if st.button("Replay Game"):
         st.session_state.level = 0
         st.session_state.score = 0
-        st.session_state.mode = "instructions"
+        st.session_state.game_state = "start"
         st.rerun()
-
+    st.markdown("</div>", unsafe_allow_html=True)
+    
